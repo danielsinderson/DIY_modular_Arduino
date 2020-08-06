@@ -73,10 +73,10 @@ class LFO
 };
 
 
-LFO lfo1(A0, A1, 11);
+LFO lfo1(A0, A1, 11); //sampleRate, waveform, output
 LFO lfo2(A2, A3, 10);
 LFO lfo3(A4, A5, 9);
-LFO lfo4(A6, A7, 6);
+LFO lfo4(A6, A7, 3);
 
 unsigned long update_control_timer = 0;
 int update_control_period = 30;
@@ -91,6 +91,9 @@ void setup() {
   lfo4.setupFunc();
   update_control_timer = millis();
   //Serial.begin(9600);
+  TCCR0B = TCCR0B & B11111000 | B00000010; // set PWM freq on pin 5/6 to ~7.8kHz
+  TCCR1B = TCCR1B & B11111000 | B00000010; // set PWM freq on pin 9/10 to ~3.9kHz
+  TCCR2B = TCCR2B & B11111000 | B00000010; // set PWM freq on pin 3/11 to ~3.9kHz
 }
 
 void loop() {

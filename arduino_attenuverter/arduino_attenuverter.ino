@@ -54,7 +54,7 @@ class Attenuverter
   }
 };
 
-Attenuverter a1(A0, A1, 11, 12, A2, 10);
+Attenuverter a1(A0, A1, 10, 12, A2, 11); //signal, factor, output, invert, offset, led
 Attenuverter a2(A3, A4, 5, 7, A5, 6);
 
 
@@ -64,7 +64,9 @@ int update_control_period = 30;
 
 
 void setup() {
-
+  TCCR0B = TCCR0B & B11111000 | B00000010; // set PWM freq on pin 5/6 to ~7.8kHz
+  TCCR1B = TCCR1B & B11111000 | B00000010; // set PWM freq on pin 9/10 to ~3.9kHz
+  TCCR2B = TCCR2B & B11111000 | B00000010; // set PWM freq on pin 3/11 to ~3.9kHz
 }
 
 void loop() {

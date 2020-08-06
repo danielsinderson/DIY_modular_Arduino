@@ -56,15 +56,6 @@ byte triggerCounts[3] = {0, 0, 0};
 unsigned long indexCounters[3] = {0, 0, 0};
 byte indexes[3] = {0, 0, 0};
 
-const byte modePin = 10;
-bool mode = 0;
-unsigned long beatCounter = 0;
-byte beatSelect = 0;
-bool outputArrays2[3][L] = {{0, 0, 0, 0, 0, 0, 0, 0},
-                           {0, 0, 0, 0, 0, 0, 0, 0},
-                           {0, 0, 0, 0, 0, 0, 0, 0}};
-byte indexes2[3] = {0, 0, 0};
-
 
 unsigned long update_control_timer = 0;
 int update_control_period = 100;
@@ -95,49 +86,28 @@ void setup() {
 
 void loop() {
 
-  //mode read block
-  bool newRead = digitalRead(modePin);
-  if (newRead == HIGH and mode == LOW) {
-    encoder.write(0);
-  }
-  else if (newRead == LOW and mode == HIGH) {
-    encoder.write(counters[seqSelect][paramSelect]);
-  }
-  mode = newRead;
-
   //Button block
   button.check();
 
   //Rotary encoder block
   long newPosition = encoder.read();
-
-  if (mode == 0) {
-    byte x = maxes[seqSelect][paramSelect] << 2;
-    byte y = mins[seqSelect][paramSelect] << 2;
-    if (newPosition > x) { 
-      newPosition = x;
-      encoder.write(x);
-    }
-    else if (newPosition < y) {
-      newPosition = y;
-      encoder.write(y);
-    }
   
-    if (newPosition != counters[seqSelect][paramSelect]) {
-      counters[seqSelect][paramSelect] = newPosition;
-      //printUpdate();
-      //printSeqs();
-    }
+  byte x = maxes[seqSelect][paramSelect] << 2;
+  byte y = mins[seqSelect][paramSelect] << 2;
+  if (newPosition > x) { 
+    newPosition = x;
+    encoder.write(x);
   }
-  else {
-    if (newPosition != beatCounter) {
-      beatCounter = newPosition;
-      beatSelect = (beatCounter >> 2) % L;
-      //printUpdate();
-      //printSeqs();
-    }
+  else if (newPosition < y) {
+    newPosition = y;
+    encoder.write(y);
   }
   
+  if (newPosition != counters[seqSelect][paramSelect]) {
+    counters[seqSelect][paramSelect] = newPosition;
+    printUpdate();
+    //printSeqs();
+  }
   
   updateParamValues();
   updateParamMaxes();
@@ -152,28 +122,17 @@ void loop() {
   bool t = digitalRead(triggerPin);
   if (t == HIGH and trigger == LOW) {
     trigger = HIGH;
-    if (mode == 0) {
-      for (byte i=0;i<3;i++) { 
-        triggerCounts[i]++;
-        if (triggerCounts[i] >= values[i][3]) { // if trigger counter for seq is equal to the clk divider inc index and reset to zero
-          triggerCounts[i] = 0;
-          indexCounters[i]++;
-        }
-      }      
-    }
-    else {
-      for (byte i=0;i<3;i++) { 
-        indexes2[i]++;
-        if (indexes2[i] >= L) { indexes2[i] = 0; }
+    for (byte i=0;i<3;i++) { 
+      triggerCounts[i]++;
+      if (triggerCounts[i] >= values[i][3]) { // if trigger counter for seq is equal to the clk divider inc index and reset to zero
+        triggerCounts[i] = 0;
+        indexCounters[i]++;
+        indexes[i] = (indexCounters[i] + values[i][2]) % values[i][0];
       }
     }
   }
-  
   else if (t == LOW and trigger == HIGH) {
     trigger = LOW;
-  }
-  for (byte i=0; i<3; i++) {
-    indexes[i] = (indexCounters[i] + values[i][2]) % values[i][0]; 
   }
 
 
@@ -184,24 +143,12 @@ void loop() {
   }
 
   //output block
-  if (mode == 0) {
-    for (byte i=0;i<3;i++) {
-      if (outputArrays[i][indexes[i]] == 1) {
-        digitalWrite(outputPins[i], HIGH);
-      }
-      else {
-        digitalWrite(outputPins[i], LOW);
-      }
+  for (byte i=0;i<3;i++) {
+    if (outputArrays[i][indexes[i]] == 1) {
+      digitalWrite(outputPins[i], HIGH);
     }
-  }
-  else {
-    for (byte i=0;i<3;i++) {
-      if (outputArrays2[i][indexes2[i]] == 1) {
-        digitalWrite(outputPins[i], HIGH);
-      }
-      else {
-        digitalWrite(outputPins[i], LOW);
-      }
+    else {
+      digitalWrite(outputPins[i], LOW);
     }
   }
 
@@ -214,14 +161,6 @@ void loop() {
  * FUNCTIONS 
  */
 
-void toggleBeat() {
-  if (outputArrays2[seqSelect][beatSelect] == 0) {
-    outputArrays2[seqSelect][beatSelect] = 1;
-  }
-  else {
-    outputArrays2[seqSelect][beatSelect] = 0;
-  }
-}
 
 // The event handler for the button.
 void handleEvent(AceButton* /* button */, uint8_t eventType,
@@ -232,21 +171,14 @@ void handleEvent(AceButton* /* button */, uint8_t eventType,
     case AceButton::kEventReleased:
       seqSelectCounter++;
       seqSelect = seqSelectCounter % 3;
-      if (mode == 0) {
-        paramSelectCounter = 0;
-        paramSelect = paramSelectCounter % 4;
-        encoder.write(counters[seqSelect][paramSelect]);
-      }
+      paramSelectCounter = 0;
+      paramSelect = paramSelectCounter % 4;
+      encoder.write(counters[seqSelect][paramSelect]);
       break;
     case AceButton::kEventDoubleClicked:
-      if (mode == 0) {
-        paramSelectCounter++;
-        paramSelect = paramSelectCounter % 4;
-        encoder.write(counters[seqSelect][paramSelect]);
-      }
-      else {
-        toggleBeat();
-      }
+      paramSelectCounter++;
+      paramSelect = paramSelectCounter % 4;
+      encoder.write(counters[seqSelect][paramSelect]);
       break;
     case AceButton::kEventLongPressed:
       break;
@@ -255,42 +187,21 @@ void handleEvent(AceButton* /* button */, uint8_t eventType,
 
 void setLEDS() {
   // sequencer LEDs
-  if (mode == 0) {
-    for (byte i=0; i<L; i++) {
-      if (i == indexes[seqSelect]) { leds.setPixelColor(i, 60, 60, 60); }
-      else if (outputArrays[seqSelect][i] == 1) {
-        if (seqSelect == 0) { leds.setPixelColor(i, 150, 0, 0); }
-        else if (seqSelect == 1) { leds.setPixelColor(i, 0, 150, 0); }
-        else { leds.setPixelColor(i, 0, 0, 150); }
-      }
-      else if (i < values[seqSelect][0]) { 
-        if (seqSelect == 0) { leds.setPixelColor(i, 15, 3, 3); }
-        else if (seqSelect == 1) { leds.setPixelColor(i, 3, 15, 3); }
-        else { leds.setPixelColor(i, 3, 3, 15); }
-      }
-      else { leds.setPixelColor(i, 0, 0, 0); }
+  for (byte i=0; i<8; i++) {
+    if (i == indexes[seqSelect]) { leds.setPixelColor(i, 60, 60, 60); }
+    else if (outputArrays[seqSelect][i] == 1) {
+      if (seqSelect == 0) { leds.setPixelColor(i, 150, 0, 0); }
+      else if (seqSelect == 1) { leds.setPixelColor(i, 0, 150, 0); }
+      else { leds.setPixelColor(i, 0, 0, 150); }
     }
-
-    // Param LED
-    if (paramSelect == 0) { leds.setPixelColor(L, 100, 0, 50); }
-    else if (paramSelect == 1) { leds.setPixelColor(L, 50, 100, 0); }
-    else if (paramSelect == 2) { leds.setPixelColor(L, 0, 75, 75); }
-    else { leds.setPixelColor(L, 60, 60, 60); }
+    else { leds.setPixelColor(i, 0, 0, 0); }
   }
 
-  else {
-    leds.setPixelColor(L, 0, 0, 0);
-    for (byte i=0; i<L; i++) {
-      if (i == indexes2[seqSelect]) { leds.setPixelColor(i, 60, 60, 60); }
-      else if (outputArrays2[seqSelect][i] == 1) {
-        if (seqSelect == 0) { leds.setPixelColor(i, 125, 0, 75); }
-        else if (seqSelect == 1) { leds.setPixelColor(i, 75, 125, 0); }
-        else { leds.setPixelColor(i, 0, 75, 125); }
-      }
-      else { leds.setPixelColor(i, 0, 0, 0); }
-    }
-    leds.setPixelColor(beatSelect, 255, 100, 25);
-  }
+  // Param LED
+  if (paramSelect == 0) { leds.setPixelColor(L, 100, 0, 50); }
+  else if (paramSelect == 1) { leds.setPixelColor(L, 50, 100, 0); }
+  else if (paramSelect == 2) { leds.setPixelColor(L, 0, 75, 75); }
+  else { leds.setPixelColor(L, 60, 60, 60); }
 }
 
 void updateParamMaxes() {

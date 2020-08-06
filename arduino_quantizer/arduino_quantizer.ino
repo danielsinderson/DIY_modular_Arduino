@@ -66,7 +66,7 @@ class Quantizer
   
 };
 
-Quantizer q1(A2, 9, A3, A4);
+Quantizer q1(A2, 9, A3, A4); //input, output, rangeStart, rangeEnd
 Quantizer q2(A5, 10, A6, A7);
 
 unsigned long update_control_timer = 0;
@@ -79,6 +79,9 @@ void setup() {
   for (byte i=0;i<60;i++) {
     toneArray[i] = (byte) ceil(4.25 * i);
   }
+  TCCR0B = TCCR0B & B11111000 | B00000010; // set PWM freq on pin 5/6 to ~7.8kHz
+  TCCR1B = TCCR1B & B11111000 | B00000010; // set PWM freq on pin 9/10 to ~3.9kHz
+  TCCR2B = TCCR2B & B11111000 | B00000010; // set PWM freq on pin 3/11 to ~3.9kHz
 }
 
 void loop() {

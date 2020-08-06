@@ -96,6 +96,8 @@ void read_trigger() {
 
 void setup() {
   startMozzi();
+  oscillator.setFreq(220);
+  oscillator.setTable(SIN2048_DATA);
   //lpf.setResonance(0);
   //lpf.setCutoffFreq(255);
   //envelope.setLevels(255, 150, 150, 0);
@@ -126,7 +128,9 @@ void updateControl() {
 
 
 int updateAudio() {
-  int audio = (oscillator.next() * volume) >> 2;
+  int audio;
+  if (waveform != 3 or waveform != 4) { audio = (oscillator.next() * volume) >> 2; }
+  else { audio = (oscillator.next() * volume) >> 4; } // the square and saw waves are fucking loud -- this mellows them to be about the same volume as the other waveforms
   //int filtered_audio = lpf.next(audio);
   return audio;
   //return filtered_audio;

@@ -23,8 +23,8 @@ byte mode = 0;
 
 void read_trigger() {
   if (digitalRead(triggerPin) == true and trigger == false) {
-    in1 = analogRead(inputPins[0]) >> 4;
-    in2 = analogRead(inputPins[1]) >> 4;
+    in1 = analogRead(inputPins[0]) >> 2;
+    in2 = analogRead(inputPins[1]) >> 2;
     trigger = true;
   }
   else if (digitalRead(triggerPin) == false and trigger == true) {
@@ -48,5 +48,5 @@ void loop() {
   else if (mode == 2) { output = in1 & in2; }
   else { output = in1 ^ in2; }
 
-  PORTB = output;
+  PORTD = output;
 }

@@ -8,32 +8,35 @@
  */
 
 //PINS
-const byte input_pins[4] = {A0, A1, A2, A3};
-const byte output_pins[4] = {6, 9, 10, 11};
-const byte trigger_pins[4] = {2, 4, 8, 12};
-const byte mode_pins[4] = {3, 5, 7, 18};
+const byte input_pins[4] = {A0, A2, A4, A6};
+const byte output_pins[4] = {11, 10, 9, 3};
+const byte trigger_pins[4] = {15, 17, 19, 21};
+const byte mode_pins[4] = {5, 6, 7, 12};
 
+bool toggles[4] = {0, 0, 0, 0};
 bool triggers[4] = {0, 0, 0, 0};
 byte output_values[4] = {0, 0, 0, 0};
 
 
 void setup() {
-  
+  TCCR0B = TCCR0B & B11111000 | B00000010; // set PWM freq on pin 5/6 to ~7.8kHz
+  TCCR1B = TCCR1B & B11111000 | B00000010; // set PWM freq on pin 9/10 to ~3.9kHz
+  TCCR2B = TCCR2B & B11111000 | B00000010; // set PWM freq on pin 3/11 to ~3.9kHz
 }
 
 void loop() {
   for (byte i=0;i<4;i++) {
     //read pins
     bool mode = digitalRead(mode_pins[i]);
-    bool toggle = digitalRead(trigger_pins[i]);
+    toggle[i] = digitalRead(trigger_pins[i]);
 
     // S&H mode
     if (mode == 0) {
-      if ((toggle == 1) && (triggers[i] == 0)) {
+      if ((toggle[i] == 1) && (triggers[i] == 0)) {
         output_values[i] = analogRead(input_pins[i]) >> 2;
         triggers[i] = 1;
       }
-      else if ((toggle == 0) && (triggers[i] == 1)) {
+      else if ((toggle[i] == 0) && (triggers[i] == 1)) {
         triggers[i] = 0;
       }
       analogWrite(output_pins[i], output_values[i]);
