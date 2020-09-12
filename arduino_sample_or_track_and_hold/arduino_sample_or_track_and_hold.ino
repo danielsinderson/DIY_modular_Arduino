@@ -28,27 +28,26 @@ void loop() {
   for (byte i=0;i<4;i++) {
     //read pins
     bool mode = digitalRead(mode_pins[i]);
-    toggle[i] = digitalRead(trigger_pins[i]);
+    trigger[i] = digitalRead(trigger_pins[i]);
 
     // S&H mode
     if (mode == 0) {
-      if ((toggle[i] == 1) && (triggers[i] == 0)) {
+      if ((toggle[i] == 0) && (triggers[i] == 1)) {
         output_values[i] = analogRead(input_pins[i]) >> 2;
-        triggers[i] = 1;
+        toggle[i] = 1;
       }
-      else if ((toggle[i] == 0) && (triggers[i] == 1)) {
-        triggers[i] = 0;
+      else if ((toggle[i] == 1) && (triggers[i] == 0)) {
+        toggle[i] = 0;
       }
-      analogWrite(output_pins[i], output_values[i]);
     }
 
     //T&H mode
     else {
-      if (toggle == 1) {
+      if (trigger[i] == 1) {
         output_values[i] = analogRead(input_pins[i]) >> 2;
       }
-      analogWrite(output_pins[i], output_values[i]);
     }
+    analogWrite(output_pins[i], output_values[i]);
   }
 
 }
