@@ -1,6 +1,6 @@
 /*
  * A janky sort of sequencer module. It takes a trigger and an analog signal. 
- * When the trigger goes high it samples a 6-bit value from the analog signal and uses those bits to toggle siz outputs ON/OFF.
+ * When the trigger goes high it samples a 6-bit value from the analog signal and uses those bits to toggle its outputs ON/OFF. Outputs are spit out on PORTD.
  * It also has the option to read a second analog signal and use some bitwise operators to manipulate to outputs.
  * 
  * MODULE FINISHED. No optimizations necessary.
@@ -23,8 +23,8 @@ byte mode = 0;
 
 void read_trigger() {
   if (digitalRead(triggerPin) == true and trigger == false) {
-    in1 = analogRead(inputPins[0]) >> 2;
-    in2 = analogRead(inputPins[1]) >> 2;
+    in1 = analogRead(inputPins[0]) >> 4;
+    in2 = analogRead(inputPins[1]) >> 4;
     trigger = true;
   }
   else if (digitalRead(triggerPin) == false and trigger == true) {
