@@ -1,6 +1,6 @@
 /*
  * A janky sort of sequencer module. It takes a trigger and an analog signal. 
- * When the trigger goes high it samples a 6-bit value from the analog signal and uses those bits to toggle its outputs ON/OFF. Outputs are spit out on PORTD.
+ * When the trigger goes high it samples a 6-bit value from the analog signal and uses those bits to toggle its outputs ON/OFF. Outputs are spit out on PORTB.
  * It also has the option to read a second analog signal and use some bitwise operators to manipulate to outputs.
  * 
  * MODULE FINISHED. No optimizations necessary.
@@ -48,5 +48,5 @@ void loop() {
   else if (mode == 2) { output = in1 & in2; }
   else { output = in1 ^ in2; }
 
-  PORTD = output;
+  PORTB = output;
 }
