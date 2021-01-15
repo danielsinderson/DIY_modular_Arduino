@@ -22,7 +22,7 @@
 
 
 //PINS!
-const byte analog_inputs[2][5] = {{A1, A0, A2},
+const byte analog_inputs[2][3] = {{A1, A0, A2},
                                   {A4, A3, A2}};  // {tone, volume, waveform}
 const byte mode_inputs[2] = {5, 6};
 
